@@ -5,10 +5,9 @@ import PySide6.QtCore as Qc
 import PySide6.QtTest as Qt
 import varFunc_def as vfd
 
-# MainWindowクラス定義 ####
+# * MainWindowクラス定義
 class MainWindow(Qw.QMainWindow):
 
-  # *MainWIndow
   def __init__(self):
     super().__init__()
 
@@ -20,6 +19,9 @@ class MainWindow(Qw.QMainWindow):
     rect.setSize(Qc.QSize(vfd.mainWindowSize[0], vfd.mainWindowSize[1]))
     rect.moveCenter(app.primaryScreen().availableGeometry().center())
     self.setGeometry(rect)
+
+    # ウィンドウ名
+    self.setWindowTitle('Main')
 
     # 「実行」ボタンの生成と設定
     self.btn_run = Qw.QPushButton('実行', self)
@@ -64,9 +66,35 @@ class MainWindow(Qw.QMainWindow):
     log += self.tb_log.toPlainText()
     self.tb_log.setPlainText(log)
 
+  def show_new_window(self, checked):
+    self.w = AttackSelectWindow()
+    self.w.show()
+
+# * AttackSelectWindowクラス定義
+class AttackSelectWindow(Qw.QWidget):
+
+  def __init__(self):
+    super().__init__()
+
+    # ウィンドウサイズの固定
+    self.setFixedSize(vfd.mainWindowSize[0] + 100, vfd.mainWindowSize[1] + 200)
+
+    # ウィンドウの位置をスクリーン中央に設定
+    rect = Qc.QRect()
+    rect.setSize(Qc.QSize(vfd.mainWindowSize[0], vfd.mainWindowSize[1]))
+    rect.moveCenter(app.primaryScreen().availableGeometry().center())
+    self.setGeometry(rect)
+
+    # ウィンドウ名
+    self.setWindowTitle('AttackSelect')
+
+
 # 本体
 if __name__ == '__main__':
   app = Qw.QApplication(sys.argv)
-  main_window = MainWindow()
-  main_window.show()
+  window = []
+  window.append(MainWindow())
+  window.append(AttackSelectWindow())
+  for i in range(len(window)):
+    window[i].show()
   sys.exit(app.exec())
