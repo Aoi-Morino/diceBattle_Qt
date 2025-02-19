@@ -43,6 +43,9 @@ class MainWindow(Qw.QMainWindow):
   # 「実行」ボタンの押下処理
   def btn_run_clicked(self):
 
+    # AttackSelectWindowクラスの呼び出し
+    aswClass = AttackSelectWindow()
+
     # プログレスバーダイアログ (演出効果) の表示
     rollTheDice = ['  1D100抽出中 ~ ―  ',
                    '  1D100抽出中 ~ ＼  ',
@@ -62,9 +65,10 @@ class MainWindow(Qw.QMainWindow):
     p_bar.close()
 
     # テキストボックスの表示を更新
-    log = f'{vfd.Dice_1D100()}\n'
-    log += self.tb_log.toPlainText()
-    self.tb_log.setPlainText(log)
+    self.rbId = aswClass.attackChoices.checkedId() - 1
+    attackDiceResult = aswClass.AttackDice()
+    attackDiceResult += self.tb_log.toPlainText()
+    self.tb_log.setPlainText(attackDiceResult)
 
 # * AttackSelectWindowクラス定義
 class AttackSelectWindow(Qw.QWidget):
@@ -73,6 +77,8 @@ class AttackSelectWindow(Qw.QWidget):
     super().__init__()
 
     mainLayout = Qw.QVBoxLayout()
+
+    self.rbId = 0
 
     # ウィンドウサイズの固定
     self.setFixedSize(
@@ -112,7 +118,7 @@ class AttackSelectWindow(Qw.QWidget):
       rbLayout.addWidget(rb)  # レイアウトに追加
       self.attackChoices.addButton(rb, i)  # 選択グループに追加
     # ラジオボタンがクリックされたら下の方のテクストの変化もさせる
-    self.attackChoices.buttonClicked.connect(self.rbClicked)
+    self.attackChoices.buttonClicked.connect(self.RBClicked)
     # 攻撃の説明文
     self.attackExp = Qw.QLabel('')
     mainLayout.addWidget(self.attackExp)
@@ -121,21 +127,41 @@ class AttackSelectWindow(Qw.QWidget):
     self.labelTXT = Qw.QLabel('', self)
     mainLayout.addWidget(self.labelTXT)
 
-  def rbClicked(self):
-    rbId = self.attackChoices.checkedId() - 1
-    if 0 <= rbId < len(vfd.attacks):
-      TempTXT = f'成功率：{vfd.attacks[rbId].successRate}｜ダイス：{vfd.attacks[rbId].dice}d{vfd.attacks[rbId].damage}'
-      if vfd.attacks[rbId].fast:
+    # self.rbId = self.attackChoices.checkedId() - 1
+
+  def RBClicked(self):
+    self.rbId = self.attackChoices.checkedId() - 1
+    if 0 <= self.rbId < len(vfd.attacks):
+      TempTXT = f'成功率：{vfd.attacks[self.rbId].successRate}｜ダイス：{vfd.attacks[self.rbId].dice}d{vfd.attacks[self.rbId].damage}'
+      if vfd.attacks[self.rbId].fast:
         TempTXT += ' | 速度：先行'
       else:
         TempTXT += ' | 速度：順行'
-      if vfd.attacks[rbId].indirect:
+      if vfd.attacks[self.rbId].indirect:
         TempTXT += ' | 距離：遠距離'
       else:
         TempTXT += ' | 距離：近距離'
     else:
-      TempTXT = 'errorText：異常な選択です。ゲームが破壊される可能性があります。選択しないでください。'
+      TempTXT = 'errorText：異常な選択です。制作者に報告してください。'
     self.labelTXT.setText(TempTXT)
+    print(self.rbId)
+  # ダイス結果の計算
+
+  def AttackDice(self):
+    diceResult = vfd.Dice_1D100()
+    if vfd.attacks[self.rbId].successRate >= diceResult:
+      if 5 >= diceResult:
+        attackDiceResult = f'{vfd.attacks[self.rbId].successRate} ≧ {diceResult}　クリティカル（決定的成功）\n'
+      else:
+        attackDiceResult = f'{vfd.attacks[self.rbId].successRate} ≧ {diceResult}　成功\n'
+    else:
+      if 95 >= diceResult:
+        attackDiceResult = f'{vfd.attacks[self.rbId].successRate} ＜ {diceResult}　失敗\n'
+      else:
+        attackDiceResult = f'{vfd.attacks[self.rbId].successRate} ＜ {diceResult}　ファンブル（致命的失敗）\n'
+
+    print(self.rbId)
+    return attackDiceResult
 
 
 # 本体
