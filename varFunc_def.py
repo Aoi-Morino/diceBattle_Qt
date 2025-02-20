@@ -4,15 +4,10 @@ import PySide6.QtWidgets as Qw
 import PySide6.QtCore as Qc
 import PySide6.QtTest as Qt
 
-# ランダム数字抽出
-def Dice_1D100():
-  x = r.randint(1, 100)
-  return x
-
-# 能力値算出処理
-def Calc_3D6(plus: int, rep: int):
-  for i in range(rep):
-    plus += r.randint(1, 6)
+# ダイスロール
+def DiceRoll(diceNum: int, diceMax: int, plus: int):
+  for i in range(diceNum):
+    plus += r.randint(1, diceMax)
   return plus
 
 # 敵の名前の生成処理
@@ -83,28 +78,28 @@ class Status():
 enemyName = EnemyNameEdit()
 
 # 敵のステータスのインスタンスの生成
-enemyStatus = Status(Calc_3D6(0, 3),
-                     Calc_3D6(0, 3),
-                     Calc_3D6(6, 2),
-                     Calc_3D6(0, 3),
-                     Calc_3D6(0, 3),
-                     Calc_3D6(6, 2),
-                     Calc_3D6(0, 3),
-                     Calc_3D6(6, 3),
+enemyStatus = Status(DiceRoll(3, 6, 0),
+                     DiceRoll(3, 6, 0),
+                     DiceRoll(2, 6, 6),
+                     DiceRoll(3, 6, 0),
+                     DiceRoll(3, 6, 0),
+                     DiceRoll(2, 6, 6),
+                     DiceRoll(3, 6, 0),
+                     DiceRoll(3, 6, 6),
                      0)
 # state_HPは他のステータスに依存し決定するため後から生成
 enemyStatus.state_HP = round(
     (enemyStatus.state_CON + enemyStatus.state_SIZ) / 2)
 
 # プレイヤーのステータスのインスタンスの生成
-playerStatus = Status(Calc_3D6(0, 3),
-                      Calc_3D6(0, 3),
-                      Calc_3D6(6, 2),
-                      Calc_3D6(0, 3),
-                      Calc_3D6(0, 3),
-                      Calc_3D6(6, 2),
-                      Calc_3D6(0, 3),
-                      Calc_3D6(6, 3),
+playerStatus = Status(DiceRoll(3, 6, 0),
+                      DiceRoll(3, 6, 0),
+                      DiceRoll(2, 6, 6),
+                      DiceRoll(3, 6, 0),
+                      DiceRoll(3, 6, 0),
+                      DiceRoll(2, 6, 6),
+                      DiceRoll(3, 6, 0),
+                      DiceRoll(3, 6, 6),
                       0)
 # state_HPは他のステータスに依存し決定するため後から生成
 playerStatus.state_HP = round(

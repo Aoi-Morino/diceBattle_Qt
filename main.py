@@ -142,7 +142,7 @@ class MainWindow(Qw.QMainWindow):
 
   # 攻撃ダイスの処理
   def AttackDice(self):
-    diceResult = vfd.Dice_1D100()
+    diceResult = vfd.DiceRoll(1, 100, 0)
     if vfd.attacks[self.rbId_attack].successRate >= diceResult:
       if 5 >= diceResult:
         diceResult = f'{vfd.attacks[self.rbId_attack].name}（{vfd.attacks[self.rbId_attack].successRate}） ≧ {diceResult}　クリティカル（決定的成功）\n'
@@ -157,7 +157,7 @@ class MainWindow(Qw.QMainWindow):
 
   # 守備ダイスの処理
   def DefenceDice(self):
-    diceResult = vfd.Dice_1D100()
+    diceResult = vfd.DiceRoll(1, 100, 0)
     if self.successRateDefTemp[self.rbId_defence] >= diceResult:
       if 5 >= diceResult:
         diceResult = f'{vfd.defences[self.rbId_defence].name}（{vfd.defences[self.rbId_defence].srTest}） ≧ {diceResult}　クリティカル（決定的成功）\n'
