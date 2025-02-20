@@ -26,7 +26,12 @@ textBoxSize = [620, 440]  # テキストボックスの横幅、縦幅
 
 # メインウィンドウのサイズを指定（px単位）
 mainWindowSize = [textBoxPos[0] + textBoxSize[0] + 10,
-                  textBoxPos[1] + textBoxSize[1] + 10 + 30]   # ウィンドウの横幅,縦幅
+                  textBoxPos[1] + textBoxSize[1] + 10 + 30]  # ウィンドウの横幅,縦幅
+
+# 敵守備成功時のテキスト
+enemyAvoid = ['しかし回避されてしまった！\n',
+              'しかし弾かれてしまった！\n',
+              '反撃されてしまった！\n']
 
 # 戦闘技能を扱うクラスの定義
 class Attack():
@@ -56,10 +61,10 @@ class Defence():
     self.srTest = srTest            # 成功率の一時テスト用
 
 # 防御技能一覧のインスタンスの生成
-defences = [Defence('回避', '(相手のロールの出目 + 50)', '自分への攻撃を避ける技能。失敗するとすべてのダメージを受ける。', 75),
-            Defence('防御', '((10 - ダメージ量) * 10)',
-                    'ダメージを受け止める技能。失敗しても10 - 出目 / 10(小数点以下切り下げ)だけダメージを減らす。', 75),
-            Defence('反撃', '80', '相手の攻撃を受け、反撃する技能。相手が近距離攻撃をしないと成功しない(ダメージ量1D6)', 80)]
+defences = [Defence('回避', '(相手のロールの出目 + 20)', '自分への攻撃を避ける技能。失敗するとすべてのダメージを受ける。', 75),
+            Defence('防御', '((5 - ダメージ量) * 20)',
+                    'ダメージを受け止める技能。失敗しても 5 - 出目 / 20(小数点以下切り捨て)だけダメージを減らす。', 75),
+            Defence('反撃', '60', '相手の攻撃を受け、反撃する技能。相手が近距離攻撃をしないと成功しない(ダメージ量1D4)', 80)]
 
 # 能力値を扱うクラスの生成（本ゲームではCOC6版（クトゥルフ神話RPG）の能力値決定システムを採用しています。)
 class Status():
@@ -114,17 +119,6 @@ if enemyStatus.state_DEX < playerStatus.state_DEX:
 elif enemyStatus.state_DEX == playerStatus.state_DEX:
   randomDEX = True
 
-# テキストボックスに表示するログのテンプレ一覧を扱うクラスの生成
-class LogTemplate():
-  def __init__(self, encounterLog: str,
-               enemyAttackPred: str):
-    self.encounterLog = encounterLog
-    self.enemyAttackPred = enemyAttackPred
-
-# 事前に敵の初めの行動を一度決めておく
-enemyAttackCtrl = r.randint(1, len(attacks)) - 1
-enemyDefenceCtrl = r.randint(1, len(defences)) - 1
-
 # 自分と敵のDEX・先行/後攻を知らせる文章の生成
 if randomDEX:
   fastSecondTXT = f'あなたのDEX({playerStatus.state_DEX}) ＝ 敵のDEX({enemyStatus.state_DEX})｜先攻後攻は毎回ランダム'
@@ -133,10 +127,6 @@ else:
     fastSecondTXT = f'あなたのDEX({playerStatus.state_DEX}) ＞ 敵のDEX({enemyStatus.state_DEX})｜あなたが先行'
   else:
     fastSecondTXT = f'あなたのDEX({playerStatus.state_DEX}) ＜ 敵のDEX({enemyStatus.state_DEX})｜敵が先行'
-
-# テキストボックスに表示するログのテンプレ一覧のインスタンスの生成
-logTemplate = LogTemplate(f' {enemyName} が現れた！\n戦闘技能と防御技能を選択して戦いに備えよう！\n' + fastSecondTXT,
-                          f' 相手は {attacks[enemyAttackCtrl].name} の準備をしている。\n')
 
 # ? 以下、用意したけど使う予定はなし（時間があれば追加予定）
 # 特殊攻撃を扱うクラスの定義
