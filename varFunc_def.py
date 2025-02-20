@@ -22,7 +22,7 @@ def EnemyNameEdit():
 
 # テキストボックスの位置・サイズを指定
 textBoxPos = [480, 10]  # テキストボックスの横位置,縦位置
-textBoxSize = [620, 420]  # テキストボックスの横幅、縦幅
+textBoxSize = [620, 440]  # テキストボックスの横幅、縦幅
 
 # メインウィンドウのサイズを指定（px単位）
 mainWindowSize = [textBoxPos[0] + textBoxSize[0] + 10,
@@ -106,14 +106,37 @@ playerStatus = Status(DiceRoll(3, 6, 0),
 playerStatus.state_HP = round(
     (enemyStatus.state_CON + enemyStatus.state_SIZ) / 2)
 
+# 先行後攻の算出
+randomDEX = False
+playerFirst = False
+if enemyStatus.state_DEX < playerStatus.state_DEX:
+  playerFirst = True
+elif enemyStatus.state_DEX == playerStatus.state_DEX:
+  randomDEX = True
+
 # テキストボックスに表示するログのテンプレ一覧を扱うクラスの生成
 class LogTemplate():
   def __init__(self, encounterLog: str,
-               ):
+               enemyAttackPred: str):
     self.encounterLog = encounterLog
+    self.enemyAttackPred = enemyAttackPred
+
+# 事前に敵の初めの行動を一度決めておく
+enemyAttackCtrl = r.randint(1, len(attacks)) - 1
+enemyDefenceCtrl = r.randint(1, len(defences)) - 1
+
+# 自分と敵のDEX・先行/後攻を知らせる文章の生成
+if randomDEX:
+  fastSecondTXT = f'あなたのDEX({playerStatus.state_DEX}) ＝ 敵のDEX({enemyStatus.state_DEX})｜先攻後攻は毎回ランダム'
+else:
+  if playerFirst:
+    fastSecondTXT = f'あなたのDEX({playerStatus.state_DEX}) ＞ 敵のDEX({enemyStatus.state_DEX})｜あなたが先行'
+  else:
+    fastSecondTXT = f'あなたのDEX({playerStatus.state_DEX}) ＜ 敵のDEX({enemyStatus.state_DEX})｜敵が先行'
 
 # テキストボックスに表示するログのテンプレ一覧のインスタンスの生成
-logTemplate = LogTemplate(f' {enemyName} が現れた！\n')
+logTemplate = LogTemplate(f' {enemyName} が現れた！\n戦闘技能と防御技能を選択して戦いに備えよう！\n' + fastSecondTXT,
+                          f' 相手は {attacks[enemyAttackCtrl].name} の準備をしている。\n')
 
 # ? 以下、用意したけど使う予定はなし（時間があれば追加予定）
 # 特殊攻撃を扱うクラスの定義

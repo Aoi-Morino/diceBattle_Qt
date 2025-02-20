@@ -111,7 +111,8 @@ class MainWindow(Qw.QMainWindow):
     self.tb_log.setGeometry(
         vfd.textBoxPos[0], vfd.textBoxPos[1] + 30, vfd.textBoxSize[0], vfd.textBoxSize[1])
     self.tb_log.setReadOnly(True)
-    self.tb_log.setPlainText(vfd.logTemplate.encounterLog)
+    self.tb_log.setPlainText(
+        vfd.logTemplate.enemyAttackPred + vfd.logTemplate.encounterLog)
 
     # ステータスバー
     self.sb_status = Qw.QStatusBar()
