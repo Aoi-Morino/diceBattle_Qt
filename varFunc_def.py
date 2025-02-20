@@ -12,11 +12,12 @@ def DiceRoll(diceNum: int, diceMax: int, plus: int):
 
 # 敵の名前の生成処理
 def EnemyNameEdit():
-  tempTXT = 'enemyNo.'
+  tempTXT = 'EnemyNo：['
   x = r.randint(0, 65535)
   x = hex(x)[2:]
   x = x.zfill(4)
   tempTXT += x
+  tempTXT += ']'
   return tempTXT
 
 # テキストボックスの位置・サイズを指定
@@ -104,6 +105,15 @@ playerStatus = Status(DiceRoll(3, 6, 0),
 # state_HPは他のステータスに依存し決定するため後から生成
 playerStatus.state_HP = round(
     (enemyStatus.state_CON + enemyStatus.state_SIZ) / 2)
+
+# テキストボックスに表示するログのテンプレ一覧を扱うクラスの生成
+class LogTemplate():
+  def __init__(self, encounterLog: str,
+               ):
+    self.encounterLog = encounterLog
+
+# テキストボックスに表示するログのテンプレ一覧のインスタンスの生成
+logTemplate = LogTemplate(f' {enemyName} が現れた！\n')
 
 # ? 以下、用意したけど使う予定はなし（時間があれば追加予定）
 # 特殊攻撃を扱うクラスの定義

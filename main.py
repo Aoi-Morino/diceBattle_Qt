@@ -50,18 +50,22 @@ class MainWindow(Qw.QMainWindow):
     self.attackChoices = Qw.QButtonGroup(self)  # 選択肢のグループ
     for i, attacks in enumerate(vfd.attacks, 1):
       rb = Qw.QRadioButton(self)  # 一つずつラジオボタンを作成する
+      # 1番目のラジオボタンを初期入力として設定
+      if i == 1:
+        rb.setChecked(True)
       rb.setText(attacks.name)
       rbLayout_attack.addWidget(rb)  # レイアウトに追加
       self.attackChoices.addButton(rb, i)  # 選択グループに追加
     # ラジオボタンがクリックされたら下の方のテクストの変化もさせる
     self.attackChoices.buttonClicked.connect(self.AttackRBClicked)
-    # 攻撃の説明文
+    # 攻撃の説明文の追加
     self.blankTXT = Qw.QLabel('', self)
     mainLayout.addWidget(self.blankTXT)  # 空白を挟む
     self.attackLabelTXT = Qw.QLabel('', self)
     mainLayout.addWidget(self.attackLabelTXT)
     self.attackExp = Qw.QLabel('', self)
     mainLayout.addWidget(self.attackExp)
+    self.AttackRBClicked()
 
     # 防御技能選択テキストの設定
     self.blankTXT = Qw.QLabel('')
@@ -80,18 +84,22 @@ class MainWindow(Qw.QMainWindow):
     self.defenceChoices = Qw.QButtonGroup(self)  # 選択肢のグループ
     for i, defences in enumerate(vfd.defences, 1):
       rb = Qw.QRadioButton(self)  # 一つずつラジオボタンを作成する
+      # 1番目のラジオボタンを初期入力として設定
+      if i == 1:
+        rb.setChecked(True)
       rb.setText(defences.name)
       rbLayout_defence.addWidget(rb)  # レイアウトに追加
       self.defenceChoices.addButton(rb, i)  # 選択グループに追加
     # ラジオボタンがクリックされたら下の方のテクストの変化もさせる
     self.defenceChoices.buttonClicked.connect(self.DefenceRBClicked)
-    # 攻撃の説明文
+    # 守備の説明文の追加
     self.blankTXT = Qw.QLabel('')
     mainLayout.addWidget(self.blankTXT)  # 空白を挟む
     self.defenceLabelTXT = Qw.QLabel('', self)
     mainLayout.addWidget(self.defenceLabelTXT)
     self.defenceExp = Qw.QLabel('', self)
     mainLayout.addWidget(self.defenceExp)  # 空白を挟む
+    self.DefenceRBClicked()
 
     # 「実行」ボタンの生成と設定
     self.btn_run = Qw.QPushButton('実行', self)
@@ -103,8 +111,7 @@ class MainWindow(Qw.QMainWindow):
     self.tb_log.setGeometry(
         vfd.textBoxPos[0], vfd.textBoxPos[1] + 30, vfd.textBoxSize[0], vfd.textBoxSize[1])
     self.tb_log.setReadOnly(True)
-    # self.tb_log.setPlaceholderText('(ここに実行ログを表示します)')
-    # self.tb_log.setPlainText(tempText)
+    self.tb_log.setPlainText(vfd.logTemplate.encounterLog)
 
     # ステータスバー
     self.sb_status = Qw.QStatusBar()
@@ -207,7 +214,7 @@ class MainWindow(Qw.QMainWindow):
       p_bar.setWindowModality(Qc.Qt.WindowModality.WindowModal)
       p_bar.setWindowTitle('ガチャ抽選')
       p_bar.show()
-      p_barValue = 40
+      p_barValue = 15
       for p in range(p_barValue):
         p_bar.setValue(int(p / p_barValue * 101))
         if p % 3 == 0:
