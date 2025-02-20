@@ -75,7 +75,7 @@ class MainWindow(Qw.QMainWindow):
     rbLayout_defence.setAlignment(Qc.Qt.AlignmentFlag.AlignLeft)  # 左寄せ
     mainLayout.addLayout(rbLayout_defence)
 
-    # TODO ラジオボタンの生成と設定
+    # ラジオボタンの生成と設定
     self.defenceChoices = Qw.QButtonGroup(self)  # 選択肢のグループ
     for i, defences in enumerate(vfd.defences, 1):
       rb = Qw.QRadioButton(self)  # 一つずつラジオボタンを作成する
@@ -143,15 +143,30 @@ class MainWindow(Qw.QMainWindow):
     diceResult = vfd.Dice_1D100()
     if vfd.attacks[self.rbId_attack].successRate >= diceResult:
       if 5 >= diceResult:
-        attackDiceResult = f'{vfd.attacks[self.rbId_attack].successRate} ≧ {diceResult}　クリティカル（決定的成功）\n'
+        diceResult = f'{vfd.attacks[self.rbId_attack].name}（{vfd.attacks[self.rbId_attack].successRate}） ≧ {diceResult}　クリティカル（決定的成功）\n'
       else:
-        attackDiceResult = f'{vfd.attacks[self.rbId_attack].successRate} ≧ {diceResult}　成功\n'
+        diceResult = f'{vfd.attacks[self.rbId_attack].name}（{vfd.attacks[self.rbId_attack].successRate}） ≧ {diceResult}　成功\n'
     else:
       if 95 >= diceResult:
-        attackDiceResult = f'{vfd.attacks[self.rbId_attack].successRate} ＜ {diceResult}　失敗\n'
+        diceResult = f'{vfd.attacks[self.rbId_attack].name}（{vfd.attacks[self.rbId_attack].successRate}） ＜ {diceResult}　失敗\n'
       else:
-        attackDiceResult = f'{vfd.attacks[self.rbId_attack].successRate} ＜ {diceResult}　ファンブル（致命的失敗）\n'
-    return attackDiceResult
+        diceResult = f'{vfd.attacks[self.rbId_attack].name}（{vfd.attacks[self.rbId_attack].successRate}） ＜ {diceResult}　ファンブル（致命的失敗）\n'
+    return diceResult
+
+  # 守備ダイスの処理
+  def DefenceDice(self):
+    diceResult = vfd.Dice_1D100()
+    if self.successRateDefTemp[self.rbId_defence] >= diceResult:
+      if 5 >= diceResult:
+        diceResult = f'{vfd.defences[self.rbId_defence].name}（{vfd.defences[self.rbId_defence].srTest}） ≧ {diceResult}　クリティカル（決定的成功）\n'
+      else:
+        diceResult = f'{vfd.defences[self.rbId_defence].name}（{vfd.defences[self.rbId_defence].srTest}） ≧ {diceResult}　成功\n'
+    else:
+      if 95 >= diceResult:
+        diceResult = f'{vfd.defences[self.rbId_defence].name}（{vfd.defences[self.rbId_defence].srTest}） ＜ {diceResult}　失敗\n'
+      else:
+        diceResult = f'{vfd.defences[self.rbId_defence].name}（{vfd.defences[self.rbId_defence].srTest}） ＜ {diceResult}　ファンブル（致命的失敗）\n'
+    return diceResult
 
   # 「実行」ボタンの押下処理
   def btn_run_clicked(self):
@@ -175,13 +190,19 @@ class MainWindow(Qw.QMainWindow):
         Qt.QTest.qWait(20)
       p_bar.close()
       attackDiceResult = self.AttackDice()
+      self.successRateDefTemp = [vfd.defences[0].srTest,
+                                 vfd.defences[1].srTest,
+                                 vfd.defences[2].srTest]
+      defenceDiceResult = self.DefenceDice()
     elif self.rbId_attack == len(vfd.attacks):
       attackDiceResult = 'error! 戦闘技能が選択されていません。\n'
     else:
       attackDiceResult = 'error! 異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
 
-    attackDiceResult += self.tb_log.toPlainText()
-    self.tb_log.setPlainText(attackDiceResult)
+    tempText = attackDiceResult
+    tempText += defenceDiceResult
+    tempText += self.tb_log.toPlainText()
+    self.tb_log.setPlainText(tempText)
 
 # 本体
 if __name__ == '__main__':

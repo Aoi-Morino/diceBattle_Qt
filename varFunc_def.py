@@ -40,16 +40,17 @@ attacks = [Attack('こぶし（パンチ）', 80, 1, 3, False, False, '手を使
            Attack('拳銃', 30, 1, 8, True, True, '弾が一発づつ発射されるタイプの銃を扱う攻撃。弾がないと使えない。')]
 
 class Defence():
-  def __init__(self, name: str, successRate: str, explanation: str):
+  def __init__(self, name: str, successRate: str, explanation: str, srTest: int):
     self.name = name                # 防御技能の名前
     self.successRate = successRate  # 成功率
     self.explanation = explanation  # 説明文
+    self.srTest = srTest            # 成功率の一時テスト用
 
 # 防御技能一覧のインスタンスの生成
-defences = [Defence('回避', '(相手のロールの出目 + 50)', '自分への攻撃を避ける技能。失敗するとすべてのダメージを受ける。'),
+defences = [Defence('回避', '(相手のロールの出目 + 50)', '自分への攻撃を避ける技能。失敗するとすべてのダメージを受ける。', 75),
             Defence('防御', '((10 - ダメージ量) * 10)',
-                    'ダメージを受け止める技能。失敗しても10 - 出目 / 10(小数点以下切り下げ)だけダメージを減らす。'),
-            Defence('反撃', '80', '相手の攻撃を受け、反撃する技能。相手が近距離攻撃をしないと成功しない(ダメージ量1D6)')]
+                    'ダメージを受け止める技能。失敗しても10 - 出目 / 10(小数点以下切り下げ)だけダメージを減らす。', 75),
+            Defence('反撃', '80', '相手の攻撃を受け、反撃する技能。相手が近距離攻撃をしないと成功しない(ダメージ量1D6)', 80)]
 
 # ?以下、用意したけど使う予定はなし（時間があれば追加予定）
 # 特殊攻撃を扱うクラスの定義
