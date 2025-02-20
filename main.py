@@ -12,7 +12,10 @@ class MainWindow(Qw.QMainWindow):
     super().__init__()
 
     # 戦闘技能未選択時のラジオボタンのIDの設定
-    self.rbId = len(vfd.attacks)
+    self.rbId_attack = len(vfd.attacks)
+
+    # 守備技能未選択時のラジオボタンのIDの設定
+    self.rbId_defence = len(vfd.defences)
 
     # ウィンドウサイズの固定
     self.setFixedSize(vfd.mainWindowSize[0], vfd.mainWindowSize[1])
@@ -34,37 +37,70 @@ class MainWindow(Qw.QMainWindow):
     mainLayout.setContentsMargins(15, 10, 10, 10)
 
     # 戦闘技能選択テキストの設定
-    selectTXT = Qw.QLabel('どう攻撃する？')  # 質問を表示する
-    mainLayout.addWidget(selectTXT)
+    attackSelectTXT = Qw.QLabel('どう攻撃する？')  # 質問を表示する
+    mainLayout.addWidget(attackSelectTXT)
 
     # ラジオボタンを格納する画面表示上のコンテナ
-    rbLayout = Qw.QHBoxLayout()  # 要素を水平配置
-    rbLayout.setAlignment(Qc.Qt.AlignmentFlag.AlignLeft)  # 左寄せ
-    mainLayout.addLayout(rbLayout)
+    rbLayout_attack = Qw.QHBoxLayout()  # 要素を水平配置
+    rbLayout_attack.setAlignment(Qc.Qt.AlignmentFlag.AlignLeft)  # 左寄せ
+    mainLayout.addLayout(rbLayout_attack)
 
     # ラジオボタンの生成と設定
     self.attackChoices = Qw.QButtonGroup(self)  # 選択肢のグループ
     for i, attacks in enumerate(vfd.attacks, 1):
       rb = Qw.QRadioButton(self)  # 一つずつラジオボタンを作成する
       rb.setText(attacks.name)
-      rbLayout.addWidget(rb)  # レイアウトに追加
+      rbLayout_attack.addWidget(rb)  # レイアウトに追加
       self.attackChoices.addButton(rb, i)  # 選択グループに追加
     # ラジオボタンがクリックされたら下の方のテクストの変化もさせる
-    self.attackChoices.buttonClicked.connect(self.RBClicked)
+    self.attackChoices.buttonClicked.connect(self.AttackRBClicked)
     # 攻撃の説明文
-    self.attackExp = Qw.QLabel('')
-    mainLayout.addWidget(self.attackExp)  # 空白を挟む
-    self.labelTXT = Qw.QLabel('', self)
-    mainLayout.addWidget(self.labelTXT)
+    self.blankTXT = Qw.QLabel('', self)
+    mainLayout.addWidget(self.blankTXT)  # 空白を挟む
+    self.attackLabelTXT = Qw.QLabel('', self)
+    mainLayout.addWidget(self.attackLabelTXT)
+    self.attackExp = Qw.QLabel('', self)
+    mainLayout.addWidget(self.attackExp)
+
+    # 防御技能選択テキストの設定
+    self.blankTXT = Qw.QLabel('')
+    mainLayout.addWidget(self.blankTXT)
+    self.blankTXT = Qw.QLabel('')
+    mainLayout.addWidget(self.blankTXT)  # 空白を2つ挟む
+    defenceSelectTXT = Qw.QLabel('守備はどうする？')  # 質問を表示する
+    mainLayout.addWidget(defenceSelectTXT)
+
+    # ラジオボタンを格納する画面表示上のコンテナ
+    rbLayout_defence = Qw.QHBoxLayout()  # 要素を水平配置
+    rbLayout_defence.setAlignment(Qc.Qt.AlignmentFlag.AlignLeft)  # 左寄せ
+    mainLayout.addLayout(rbLayout_defence)
+
+    # TODO ラジオボタンの生成と設定
+    self.defenceChoices = Qw.QButtonGroup(self)  # 選択肢のグループ
+    for i, defences in enumerate(vfd.defences, 1):
+      rb = Qw.QRadioButton(self)  # 一つずつラジオボタンを作成する
+      rb.setText(defences.name)
+      rbLayout_defence.addWidget(rb)  # レイアウトに追加
+      self.defenceChoices.addButton(rb, i)  # 選択グループに追加
+    # ラジオボタンがクリックされたら下の方のテクストの変化もさせる
+    self.defenceChoices.buttonClicked.connect(self.DefenceRBClicked)
+    # 攻撃の説明文
+    self.blankTXT = Qw.QLabel('')
+    mainLayout.addWidget(self.blankTXT)  # 空白を挟む
+    self.defenceLabelTXT = Qw.QLabel('', self)
+    mainLayout.addWidget(self.defenceLabelTXT)
+    self.defenceExp = Qw.QLabel('', self)
+    mainLayout.addWidget(self.defenceExp)  # 空白を挟む
 
     # 「実行」ボタンの生成と設定
     self.btn_run = Qw.QPushButton('実行', self)
-    self.btn_run.setGeometry(380, 10, 100, 20)
+    self.btn_run.setGeometry(vfd.textBoxPos[0], vfd.textBoxPos[1], 100, 20)
     self.btn_run.clicked.connect(self.btn_run_clicked)
 
     # テキストボックス
     self.tb_log = Qw.QTextEdit('', self)
-    self.tb_log.setGeometry(380, 40, 620, 420)
+    self.tb_log.setGeometry(
+        vfd.textBoxPos[0], vfd.textBoxPos[1] + 30, vfd.textBoxSize[0], vfd.textBoxSize[1])
     self.tb_log.setReadOnly(True)
     self.tb_log.setPlaceholderText('(ここに実行ログを表示します)')
 
@@ -74,40 +110,53 @@ class MainWindow(Qw.QMainWindow):
     self.sb_status.setSizeGripEnabled(False)
     self.sb_status.showMessage('～プログラム起動中～')
 
-  def RBClicked(self):
-    self.rbId = self.attackChoices.checkedId() - 1
-    if 0 <= self.rbId < len(vfd.attacks):
-      TempTXT = f'成功率：{vfd.attacks[self.rbId].successRate}｜ダイス：{vfd.attacks[self.rbId].dice}d{vfd.attacks[self.rbId].damage}'
-      if vfd.attacks[self.rbId].fast:
+  # 戦闘技能選択変更時の処理
+  def AttackRBClicked(self):
+    self.rbId_attack = self.attackChoices.checkedId() - 1
+    if 0 <= self.rbId_attack < len(vfd.attacks):
+      TempTXT = f'成功率：{vfd.attacks[self.rbId_attack].successRate}％｜ダイス：{vfd.attacks[self.rbId_attack].dice}d{vfd.attacks[self.rbId_attack].damage}'
+      if vfd.attacks[self.rbId_attack].fast:
         TempTXT += ' | 速度：先行'
       else:
         TempTXT += ' | 速度：順行'
-      if vfd.attacks[self.rbId].indirect:
+      if vfd.attacks[self.rbId_attack].indirect:
         TempTXT += ' | 距離：遠距離'
       else:
         TempTXT += ' | 距離：近距離'
     else:
       TempTXT = 'error! 異常な選択です。制作者に報告してください。'
-    self.labelTXT.setText(TempTXT)
+    self.attackLabelTXT.setText(TempTXT)
+    self.attackExp.setText(vfd.attacks[self.rbId_attack].explanation)
 
+  # 守備技能選択変更時の処理
+  def DefenceRBClicked(self):
+    self.rbId_defence = self.defenceChoices.checkedId() - 1
+    if 0 <= self.rbId_defence < len(vfd.defences):
+      TempTXT = f'成功率：{vfd.defences[self.rbId_defence].successRate}％ (0を下回る場合は0％、100を上回る場合は100％)'
+    else:
+      TempTXT = 'error! 異常な選択です。制作者に報告してください。'
+    self.defenceLabelTXT.setText(TempTXT)
+    self.defenceExp.setText(vfd.defences[self.rbId_defence].explanation)
+
+  # 攻撃ダイスの処理
   def AttackDice(self):
     diceResult = vfd.Dice_1D100()
-    if vfd.attacks[self.rbId].successRate >= diceResult:
+    if vfd.attacks[self.rbId_attack].successRate >= diceResult:
       if 5 >= diceResult:
-        attackDiceResult = f'{vfd.attacks[self.rbId].successRate} ≧ {diceResult}　クリティカル（決定的成功）\n'
+        attackDiceResult = f'{vfd.attacks[self.rbId_attack].successRate} ≧ {diceResult}　クリティカル（決定的成功）\n'
       else:
-        attackDiceResult = f'{vfd.attacks[self.rbId].successRate} ≧ {diceResult}　成功\n'
+        attackDiceResult = f'{vfd.attacks[self.rbId_attack].successRate} ≧ {diceResult}　成功\n'
     else:
       if 95 >= diceResult:
-        attackDiceResult = f'{vfd.attacks[self.rbId].successRate} ＜ {diceResult}　失敗\n'
+        attackDiceResult = f'{vfd.attacks[self.rbId_attack].successRate} ＜ {diceResult}　失敗\n'
       else:
-        attackDiceResult = f'{vfd.attacks[self.rbId].successRate} ＜ {diceResult}　ファンブル（致命的失敗）\n'
+        attackDiceResult = f'{vfd.attacks[self.rbId_attack].successRate} ＜ {diceResult}　ファンブル（致命的失敗）\n'
     return attackDiceResult
 
   # 「実行」ボタンの押下処理
   def btn_run_clicked(self):
 
-    if 0 <= self.rbId < len(vfd.attacks):
+    if 0 <= self.rbId_attack < len(vfd.attacks):
       # プログレスバーダイアログ (演出効果) の表示
       rollTheDice = ['  1D100抽出中 ~ ―  ',
                      '  1D100抽出中 ~ ＼  ',
@@ -126,7 +175,7 @@ class MainWindow(Qw.QMainWindow):
         Qt.QTest.qWait(20)
       p_bar.close()
       attackDiceResult = self.AttackDice()
-    elif self.rbId == len(vfd.attacks):
+    elif self.rbId_attack == len(vfd.attacks):
       attackDiceResult = 'error! 戦闘技能が選択されていません。\n'
     else:
       attackDiceResult = 'error! 異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
