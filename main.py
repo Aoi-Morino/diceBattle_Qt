@@ -11,8 +11,9 @@ class MainWindow(Qw.QMainWindow):
   def __init__(self):
     super().__init__()
 
-    # 戦闘技能未選択時のラジオボタンのIDの設定
+    # 戦闘・守備技能未選択時のラジオボタンのIDの設定
     self.rbId_attack = len(vfd.attacks)
+    self.rbId_defence = len(vfd.defences)
 
     # 守備技能未選択時のラジオボタンのIDの設定
     self.rbId_defence = len(vfd.defences)
@@ -102,7 +103,8 @@ class MainWindow(Qw.QMainWindow):
     self.tb_log.setGeometry(
         vfd.textBoxPos[0], vfd.textBoxPos[1] + 30, vfd.textBoxSize[0], vfd.textBoxSize[1])
     self.tb_log.setReadOnly(True)
-    self.tb_log.setPlaceholderText('(ここに実行ログを表示します)')
+    # self.tb_log.setPlaceholderText('(ここに実行ログを表示します)')
+    # self.tb_log.setPlainText(tempText)
 
     # ステータスバー
     self.sb_status = Qw.QStatusBar()
@@ -171,7 +173,30 @@ class MainWindow(Qw.QMainWindow):
   # 「実行」ボタンの押下処理
   def btn_run_clicked(self):
 
+    # 一時保存用のテキストの初期化
+    tempText = ''
+
+    # 正常に動作したかの確認用
+    normalAct = True
+
     if 0 <= self.rbId_attack < len(vfd.attacks):
+      pass
+    elif self.rbId_attack == len(vfd.attacks):
+      tempText += 'error! 戦闘技能が選択されていません。\n'
+      normalAct = False
+    else:
+      tempText += 'error! 戦闘技能が異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
+      normalAct = False
+    if 0 <= self.rbId_defence < len(vfd.defences):
+      pass
+    elif self.rbId_defence == len(vfd.defences):
+      tempText += 'error! 守備技能が選択されていません。\n'
+      normalAct = False
+    else:
+      tempText += 'error! 守備技能が異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
+      normalAct = False
+
+    if normalAct:
       # プログレスバーダイアログ (演出効果) の表示
       rollTheDice = ['  1D100抽出中 ~ ―  ',
                      '  1D100抽出中 ~ ＼  ',
@@ -189,18 +214,12 @@ class MainWindow(Qw.QMainWindow):
           p_bar.setLabelText(rollTheDice[p // 3 % len(rollTheDice)])
         Qt.QTest.qWait(20)
       p_bar.close()
-      attackDiceResult = self.AttackDice()
+      tempText += self.AttackDice()
       self.successRateDefTemp = [vfd.defences[0].srTest,
                                  vfd.defences[1].srTest,
                                  vfd.defences[2].srTest]
-      defenceDiceResult = self.DefenceDice()
-    elif self.rbId_attack == len(vfd.attacks):
-      attackDiceResult = 'error! 戦闘技能が選択されていません。\n'
-    else:
-      attackDiceResult = 'error! 異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
+      tempText += self.DefenceDice()
 
-    tempText = attackDiceResult
-    tempText += defenceDiceResult
     tempText += self.tb_log.toPlainText()
     self.tb_log.setPlainText(tempText)
 
