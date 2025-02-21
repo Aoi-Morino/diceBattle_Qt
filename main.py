@@ -1,6 +1,7 @@
 import sys
-import random as r
-import math as m
+from random import randint
+from math import floor
+from time import sleep
 import PySide6.QtWidgets as Qw
 import PySide6.QtCore as Qc
 import PySide6.QtTest as Qt
@@ -13,11 +14,17 @@ class MainWindow(Qw.QMainWindow):
     super().__init__()
 
     # 事前に敵の初めの行動を一度決めておく
-    self.enemyAttackCtrl = r.randint(1, len(vfd.attacks)) - 1
-    self.rbId_defence = r.randint(1, len(vfd.defences)) - 1
+    self.enemyAttackCtrl = randint(1, len(vfd.attacks)) - 1
+    self.enemyDefenceCtrl = randint(1, len(vfd.defences)) - 1
+
+    # 先攻後攻の制御のための定義
+    if vfd.playerFirst:
+      self.playerTurn = True
+    else:
+      self.playerTurn = False
 
     # 戦闘・守備技能未選択時のラジオボタンのIDの設定
-    self.enemyAttackCtrl = len(vfd.attacks)
+    self.rbId = len(vfd.attacks)
     self.rbId_defence = len(vfd.defences)
 
     # 守備技能未選択時のラジオボタンのIDの設定
@@ -116,8 +123,12 @@ class MainWindow(Qw.QMainWindow):
     self.tb_log.setGeometry(
         vfd.textBoxPos[0], vfd.textBoxPos[1] + 30, vfd.textBoxSize[0], vfd.textBoxSize[1])
     self.tb_log.setReadOnly(True)
-    self.tb_log.setPlainText(
-        f'相手は {vfd.attacks[self.enemyAttackCtrl].name} の準備をしている。\n {vfd.enemyName} が現れた！\n戦闘技能と防御技能を選択して戦いに備えよう！\n' + vfd.fastSecondTXT)
+    if self.playerTurn:
+      self.tb_log.setPlainText(
+          f'あなたのターンです。\n相手は 成功値({vfd.enemyName} が現れた！\n戦闘技能と防御技能を選択して戦いに備えよう！\n' + vfd.fastSecondTXT)
+    else:
+      self.tb_log.setPlainText(
+          f'相手は 成功値({vfd.attacks[self.enemyAttackCtrl].successRate}) の攻撃を準備している。\n {vfd.enemyName} が現れた！\n戦闘技能と防御技能を選択して戦いに備えよう！\n' + vfd.fastSecondTXT)
 
     # ステータスバー
     self.sb_status = Qw.QStatusBar()
@@ -127,21 +138,21 @@ class MainWindow(Qw.QMainWindow):
 
   # 戦闘技能選択変更時の処理
   def AttackRBClicked(self):
-    self.enemyAttackCtrl = self.attackChoices.checkedId() - 1
-    if 0 <= self.enemyAttackCtrl < len(vfd.attacks):
-      TempTXT = f'成功率：{vfd.attacks[self.enemyAttackCtrl].successRate}％｜ダイス：{vfd.attacks[self.enemyAttackCtrl].dice}d{vfd.attacks[self.enemyAttackCtrl].damage}'
-      if vfd.attacks[self.enemyAttackCtrl].fast:
-        TempTXT += ' | 速度：先行'
+    self.rbId_attack = self.attackChoices.checkedId() - 1
+    if 0 <= self.rbId_attack < len(vfd.attacks):
+      TempTXT = f'成功率：{vfd.attacks[self.rbId_attack].successRate}％｜ダイス：{vfd.attacks[self.rbId_attack].dice}d{vfd.attacks[self.rbId_attack].damage}'
+      if vfd.attacks[self.rbId_attack].fast:
+        TempTXT += ' | 速度：高速（回避無効）'
       else:
-        TempTXT += ' | 速度：順行'
-      if vfd.attacks[self.enemyAttackCtrl].indirect:
-        TempTXT += ' | 距離：遠距離'
+        TempTXT += ' | 速度：通常（回避有効）'
+      if vfd.attacks[self.rbId_attack].indirect:
+        TempTXT += ' | 距離：遠距離（反撃無効）'
       else:
-        TempTXT += ' | 距離：近距離'
+        TempTXT += ' | 距離：近距離（反撃有効）'
     else:
       TempTXT = 'error! 異常な選択です。制作者に報告してください。'
     self.attackLabelTXT.setText(TempTXT)
-    self.attackExp.setText(vfd.attacks[self.enemyAttackCtrl].explanation)
+    self.attackExp.setText(vfd.attacks[self.rbId_attack].explanation)
 
   # 守備技能選択変更時の処理
   def DefenceRBClicked(self):
@@ -157,44 +168,51 @@ class MainWindow(Qw.QMainWindow):
   def MyAttack(self):
     success = False
     myDiceResult = vfd.DiceRoll(1, 100, 0)
-    if vfd.attacks[self.enemyAttackCtrl].successRate >= myDiceResult:
+    if vfd.attacks[self.rbId_attack].successRate >= myDiceResult:
       success = True
       if 5 >= myDiceResult:
-        rollResultTXT = f'自分：{vfd.attacks[self.enemyAttackCtrl].name}（{vfd.attacks[self.enemyAttackCtrl].successRate}） ≧ {myDiceResult}　クリティカル（決定的成功）\n攻撃力二倍！\n'
-        damageTemp = vfd.DiceRoll(
-            vfd.attacks[self.enemyAttackCtrl].dice * 2, vfd.attacks[self.enemyAttackCtrl].damage, 0)
-        rollResultTXT += f'2D{vfd.attacks[self.enemyAttackCtrl].damage} => {damageTemp}\n'
+        rollResultTXT = f'自分：{vfd.attacks[self.rbId_attack].name}（{vfd.attacks[self.rbId_attack].successRate}） ≧ {myDiceResult}　クリティカル（決定的成功）\n攻撃力二倍！\n'
+        mainDamageTemp = vfd.DiceRoll(
+            vfd.attacks[self.rbId_attack].dice * 2, vfd.attacks[self.rbId_attack].damage, 0)
+        rollResultTXT += f'2D{vfd.attacks[self.rbId_attack].damage} => {mainDamageTemp}\n'
       else:
-        rollResultTXT = f'自分：{vfd.attacks[self.enemyAttackCtrl].name}（{vfd.attacks[self.enemyAttackCtrl].successRate}） ≧ {myDiceResult}　成功\n'
-        damageTemp = vfd.DiceRoll(
-            vfd.attacks[self.enemyAttackCtrl].dice, vfd.attacks[self.enemyAttackCtrl].damage, 0)
-        rollResultTXT += f'1D{vfd.attacks[self.enemyAttackCtrl].damage} => {damageTemp}\n'
+        rollResultTXT = f'自分：{vfd.attacks[self.rbId_attack].name}（{vfd.attacks[self.rbId_attack].successRate}） ≧ {myDiceResult}　成功\n'
+        mainDamageTemp = vfd.DiceRoll(
+            vfd.attacks[self.rbId_attack].dice, vfd.attacks[self.rbId_attack].damage, 0)
+        rollResultTXT += f'1D{vfd.attacks[self.rbId_attack].damage} => {mainDamageTemp}\n'
     else:
       if 95 >= myDiceResult:
-        rollResultTXT = f'自分：{vfd.attacks[self.enemyAttackCtrl].name}（{vfd.attacks[self.enemyAttackCtrl].successRate}） ＜ {myDiceResult}　失敗\n'
+        rollResultTXT = f'自分：{vfd.attacks[self.rbId_attack].name}（{vfd.attacks[self.rbId_attack].successRate}） ＜ {myDiceResult}　失敗\n'
       else:
-        rollResultTXT = f'自分：{vfd.attacks[self.enemyAttackCtrl].name}（{vfd.attacks[self.enemyAttackCtrl].successRate}） ＜ {myDiceResult}　ファンブル（致命的失敗）\n転んで1ダメージ...\n'
-
+        rollResultTXT = f'自分：{vfd.attacks[self.rbId_attack].name}（{vfd.attacks[self.rbId_attack].successRate}） ＜ {myDiceResult}　ファンブル（致命的失敗）\n転んで1ダメージ...\n'
     # ここから敵側の処理
     if success:
-      successRateDefTemp = [myDiceResult + 20,
-                            (5 - damageTemp) * 20,
-                            60]
-      for i in range(len(successRateDefTemp)):
-        if successRateDefTemp[i] <= 0:
-          successRateDefTemp[i] = 0
-        elif successRateDefTemp[i] >= 100:
-          successRateDefTemp[i] = 100
-      enemyDiceResult = vfd.DiceRoll(1, 100, 0)
-      if successRateDefTemp[self.rbId_defence] >= enemyDiceResult:
-        rollResultTXT += f'敵：{vfd.defences[self.rbId_defence].name}（{successRateDefTemp[self.rbId_defence]}） ≧ {enemyDiceResult}　成功\n'
-        rollResultTXT += vfd.playerAvoid[self.rbId_defence]
+      if self.enemyDefenceCtrl == 0 and vfd.attacks[self.rbId_attack].fast:
+        rollResultTXT += f'攻撃が早すぎて回避することができない！\n攻撃は敵に命中した！({mainDamageTemp}ダメージ)\n'
+      elif self.enemyDefenceCtrl == 2 and vfd.attacks[self.rbId_attack].indirect:
+        rollResultTXT += f'距離が遠すぎて反撃することができない！\n攻撃は敵に命中した！({mainDamageTemp}ダメージ)\n'
       else:
-        rollResultTXT += f'敵：{vfd.defences[self.rbId_defence].name}（{successRateDefTemp[self.rbId_defence]}） ＜ {enemyDiceResult}　失敗\n'
-        if self.rbId_defence == 1:
-          damageTemp -= m.floor(5 - enemyDiceResult / 20)
-        rollResultTXT += f'敵の攻撃を受けてしまった！({damageTemp}ダメージ)\n'
-    rollResultTXT += "\n"
+        successRateDefTemp = [myDiceResult + 50,
+                              (5 - mainDamageTemp) * 20,
+                              80]
+        for i in range(len(successRateDefTemp)):
+          if successRateDefTemp[i] <= 0:
+            successRateDefTemp[i] = 0
+          elif successRateDefTemp[i] >= 100:
+            successRateDefTemp[i] = 100
+        enemyDiceResult = vfd.DiceRoll(1, 100, 0)
+        if successRateDefTemp[self.enemyDefenceCtrl] >= enemyDiceResult:
+          rollResultTXT += f'敵：{vfd.defences[self.enemyDefenceCtrl].name}（{successRateDefTemp[self.enemyDefenceCtrl]}） ≧ {enemyDiceResult}　成功\n'
+          rollResultTXT += vfd.enemyAvoid[self.enemyDefenceCtrl]
+          if self.enemyDefenceCtrl == 2:
+            counterDamageTemp = vfd.DiceRoll(1, 4, 0)
+            rollResultTXT += f'1D4 => {counterDamageTemp}ダメージ\n'
+        else:
+          rollResultTXT += f'敵：{vfd.defences[self.enemyDefenceCtrl].name}（{successRateDefTemp[self.enemyDefenceCtrl]}） ＜ {enemyDiceResult}　失敗\n'
+          if self.enemyDefenceCtrl == 1:
+            mainDamageTemp -= floor(5 - enemyDiceResult / 20)
+          rollResultTXT += f'攻撃は敵に命中した！({mainDamageTemp}ダメージ)\n'
+    rollResultTXT += "\n\n"
     return rollResultTXT
 
   # 敵の攻撃の処理
@@ -205,40 +223,47 @@ class MainWindow(Qw.QMainWindow):
       success = True
       if 5 >= enemyDiceResult:
         rollResultTXT = f'敵：{vfd.attacks[self.enemyAttackCtrl].name}（{vfd.attacks[self.enemyAttackCtrl].successRate}） ≧ {enemyDiceResult}　クリティカル（決定的成功）\n攻撃力二倍！\n'
-        damageTemp = vfd.DiceRoll(
+        mainDamageTemp = vfd.DiceRoll(
             vfd.attacks[self.enemyAttackCtrl].dice * 2, vfd.attacks[self.enemyAttackCtrl].damage, 0)
-        rollResultTXT += f'2D{vfd.attacks[self.enemyAttackCtrl].damage} => {damageTemp}\n'
+        rollResultTXT += f'2D{vfd.attacks[self.enemyAttackCtrl].damage} => {mainDamageTemp}\n'
       else:
         rollResultTXT = f'敵：{vfd.attacks[self.enemyAttackCtrl].name}（{vfd.attacks[self.enemyAttackCtrl].successRate}） ≧ {enemyDiceResult}　成功\n'
-        damageTemp = vfd.DiceRoll(
+        mainDamageTemp = vfd.DiceRoll(
             vfd.attacks[self.enemyAttackCtrl].dice, vfd.attacks[self.enemyAttackCtrl].damage, 0)
-        rollResultTXT += f'1D{vfd.attacks[self.enemyAttackCtrl].damage} => {damageTemp}\n'
+        rollResultTXT += f'1D{vfd.attacks[self.enemyAttackCtrl].damage} => {mainDamageTemp}\n'
     else:
       if 95 >= enemyDiceResult:
         rollResultTXT = f'敵：{vfd.attacks[self.enemyAttackCtrl].name}（{vfd.attacks[self.enemyAttackCtrl].successRate}） ＜ {enemyDiceResult}　失敗\n'
       else:
         rollResultTXT = f'敵：{vfd.attacks[self.enemyAttackCtrl].name}（{vfd.attacks[self.enemyAttackCtrl].successRate}） ＜ {enemyDiceResult}　ファンブル（致命的失敗）\n転んで1ダメージ...\n'
-
     # ここからプレイヤー側の処理
     if success:
-      successRateDefTemp = [enemyDiceResult + 20,
-                            (5 - damageTemp) * 20,
-                            60]
-      for i in range(len(successRateDefTemp)):
-        if successRateDefTemp[i] <= 0:
-          successRateDefTemp[i] = 0
-        elif successRateDefTemp[i] >= 100:
-          successRateDefTemp[i] = 100
-      myDiceResult = vfd.DiceRoll(1, 100, 0)
-      if successRateDefTemp[self.rbId_defence] >= myDiceResult:
-        rollResultTXT += f'自分：{vfd.defences[self.rbId_defence].name}（{successRateDefTemp[self.rbId_defence]}） ≧ {myDiceResult}　成功\n'
-        rollResultTXT += vfd.enemyAvoid[self.rbId_defence]
+      if self.rbId_defence == 0 and vfd.attacks[self.enemyAttackCtrl].fast:
+        rollResultTXT += f'攻撃が早すぎて回避することができない！\n敵の攻撃を受けてしまった！({mainDamageTemp}ダメージ)\n'
+      elif self.rbId_defence == 2 and vfd.attacks[self.enemyAttackCtrl].indirect:
+        rollResultTXT += f'距離が遠すぎて反撃することができない！\n敵の攻撃を受けてしまった！({mainDamageTemp}ダメージ)\n'
       else:
-        rollResultTXT += f'自分：{vfd.defences[self.rbId_defence].name}（{successRateDefTemp[self.rbId_defence]}） ＜ {myDiceResult}　失敗\n'
-        if self.rbId_defence == 1:
-          damageTemp -= m.floor(5 - myDiceResult / 20)
-        rollResultTXT += f'敵の攻撃を受けてしまった！({damageTemp}ダメージ)\n'
-    rollResultTXT += "\n"
+        successRateDefTemp = [enemyDiceResult + 50,
+                              (5 - mainDamageTemp) * 20,
+                              80]
+        for i in range(len(successRateDefTemp)):
+          if successRateDefTemp[i] <= 0:
+            successRateDefTemp[i] = 0
+          elif successRateDefTemp[i] >= 100:
+            successRateDefTemp[i] = 100
+        myDiceResult = vfd.DiceRoll(1, 100, 0)
+        if successRateDefTemp[self.rbId_defence] >= myDiceResult:
+          rollResultTXT += f'自分：{vfd.defences[self.rbId_defence].name}（{successRateDefTemp[self.rbId_defence]}） ≧ {myDiceResult}　成功\n'
+          rollResultTXT += vfd.playerAvoid[self.rbId_defence]
+          if self.rbId_defence == 2:
+            counterDamageTemp = vfd.DiceRoll(1, 4, 0)
+            rollResultTXT += f'1D4 => {counterDamageTemp}ダメージ\n'
+        else:
+          rollResultTXT += f'自分：{vfd.defences[self.rbId_defence].name}（{successRateDefTemp[self.rbId_defence]}） ＜ {myDiceResult}　失敗\n'
+          if self.rbId_defence == 1:
+            mainDamageTemp -= floor(5 - myDiceResult / 20)
+          rollResultTXT += f'敵の攻撃を受けてしまった！({mainDamageTemp}ダメージ)\n'
+    rollResultTXT += "\n\n"
     return rollResultTXT
 
   # 「実行」ボタンの押下処理
@@ -248,26 +273,25 @@ class MainWindow(Qw.QMainWindow):
     tempText = ''
 
     # 正常に動作したかの確認用
-    normalAct = True
+    normalAct_attack = False
+    normalAct_defence = False
 
-    if 0 <= self.enemyAttackCtrl < len(vfd.attacks):
-      pass
-    elif self.enemyAttackCtrl == len(vfd.attacks):
+    if self.rbId_attack == 4 and vfd.playerStatus.Bullets == 0:
+      tempText += 'error! 弾切れです。他の技能を使用してください。\n'
+    elif 0 <= self.rbId_attack < len(vfd.attacks):
+      normalAct_attack = True
+    elif self.rbId_attack == len(vfd.attacks):
       tempText += 'error! 戦闘技能が選択されていません。\n'
-      normalAct = False
     else:
       tempText += 'error! 戦闘技能が異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
-      normalAct = False
     if 0 <= self.rbId_defence < len(vfd.defences):
-      pass
+      normalAct_defence = True
     elif self.rbId_defence == len(vfd.defences):
       tempText += 'error! 守備技能が選択されていません。\n'
-      normalAct = False
     else:
       tempText += 'error! 守備技能が異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
-      normalAct = False
 
-    if normalAct:
+    if normalAct_attack and normalAct_defence:
       # プログレスバーダイアログ (演出効果) の表示
       rollTheDice = ['  1D100抽出中 ~ ―  ',
                      '  1D100抽出中 ~ ＼  ',
@@ -285,15 +309,22 @@ class MainWindow(Qw.QMainWindow):
           p_bar.setLabelText(rollTheDice[p // 3 % len(rollTheDice)])
         Qt.QTest.qWait(20)
       p_bar.close()
-      subTempText = self.MyAttack()
-      subTempText += self.EnemyAttack()
+      if self.playerTurn:
+        tempText += f'相手は 成功値({vfd.attacks[self.enemyAttackCtrl].successRate}) の攻撃を準備している。\n\n'
+        tempText += self.MyAttack()
+        if self.rbId_attack == 4:
+          vfd.playerStatus.Bullets -= 1
+      else:
+        tempText += 'あなたのターンです。\n\n'
+        tempText += self.EnemyAttack()
+        if self.enemyAttackCtrl == 4:
+          vfd.enemyStatus.Bullets -= 1
+        self.enemyAttackCtrl = randint(1, len(vfd.attacks)) - 1  # 敵の行動のリセット。
+        while self.rbId_attack == 4 and vfd.enemyStatus.Bullets == 0:
+          self.enemyAttackCtrl = randint(1, len(vfd.attacks)) - 1  # 敵の行動のリセット。
+        self.enemyDefenceCtrl = randint(1, len(vfd.defences)) - 1
+      self.playerTurn = not self.playerTurn
 
-      # 敵の行動のリセット。
-      self.enemyAttackCtrl = r.randint(1, len(vfd.attacks)) - 1
-      self.rbId_defence = r.randint(1, len(vfd.defences)) - 1
-      tempText += f'相手は {vfd.attacks[self.enemyAttackCtrl].name} の準備をしている。\n'
-
-    tempText += subTempText
     tempText += self.tb_log.toPlainText()
     self.tb_log.setPlainText(tempText)
 

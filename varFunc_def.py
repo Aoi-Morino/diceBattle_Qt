@@ -1,5 +1,5 @@
 import sys
-import random as r
+from random import randint
 import PySide6.QtWidgets as Qw
 import PySide6.QtCore as Qc
 import PySide6.QtTest as Qt
@@ -7,13 +7,13 @@ import PySide6.QtTest as Qt
 # ダイスロール
 def DiceRoll(diceNum: int, diceMax: int, plus: int):
   for i in range(diceNum):
-    plus += r.randint(1, diceMax)
+    plus += randint(1, diceMax)
   return plus
 
 # 敵の名前の生成処理
 def EnemyNameEdit():
   tempTXT = 'EnemyNo：['
-  x = r.randint(0, 65535)
+  x = randint(0, 65535)
   x = hex(x)[2:]
   x = x.zfill(4)
   tempTXT += x
@@ -22,7 +22,7 @@ def EnemyNameEdit():
 
 # テキストボックスの位置・サイズを指定
 textBoxPos = [480, 10]  # テキストボックスの横位置,縦位置
-textBoxSize = [620, 440]  # テキストボックスの横幅、縦幅
+textBoxSize = [320, 440]  # テキストボックスの横幅、縦幅
 
 # メインウィンドウのサイズを指定（px単位）
 mainWindowSize = [textBoxPos[0] + textBoxSize[0] + 10,
@@ -50,30 +50,29 @@ class Attack():
     self.explanation = explanation  # 説明文
 
 # 戦闘技能一覧のインスタンスの生成
-attacks = [Attack('こぶし（パンチ）', 80, 1, 3, False, False, '手を使った攻撃。チョップや張り手も含む。'),
-           Attack('キック', 40, 1, 6, False, False,
+attacks = [Attack('こぶし（パンチ）', 80, 1, 6, False, False, '手を使った攻撃。チョップや張り手も含む。'),
+           Attack('キック', 40, 1, 8, False, False,
                   '脚を使った攻撃。回し蹴りやかかと落としやドロップキックも含む。'),
-           Attack('頭突き', 50, 1, 4, True, False, '頭を使った攻撃。驚くほど素早く攻撃できる。'),
-           Attack('投擲', 40, 1, 4, False, True, '物を投げる攻撃。石を拾って投げる。'),
-           Attack('拳銃', 30, 1, 8, True, True, '弾が一発づつ発射されるタイプの銃を扱う攻撃。弾がないと使えない。')]
+           Attack('頭突き', 80, 1, 3, True, False, '頭を使った攻撃。驚くほど素早く攻撃できる。'),
+           Attack('投擲', 80, 1, 3, False, True, '物を投げる攻撃。石を拾って投げる。'),
+           Attack('拳銃', 40, 1, 8, True, True, '弾が一発づつ発射されるタイプの銃を扱う攻撃。弾がないと使えない。')]
 
 # 守備技能を扱うクラスの定義
 class Defence():
-  def __init__(self, name: str, successRate: str, explanation: str, srTest: int):
+  def __init__(self, name: str, successRate: str, explanation: str):
     self.name = name                # 防御技能の名前
     self.successRate = successRate  # 成功率
     self.explanation = explanation  # 説明文
-    self.srTest = srTest            # 成功率の一時テスト用
 
 # 防御技能一覧のインスタンスの生成
-defences = [Defence('回避', '(相手のロールの出目 + 20)', '自分への攻撃を避ける技能。失敗するとすべてのダメージを受ける。', 75),
+defences = [Defence('回避', '(相手のロールの出目 + 50)', '自分への攻撃を避ける技能。失敗するとすべてのダメージを受ける。'),
             Defence('防御', '((5 - ダメージ量) * 20)',
-                    'ダメージを受け止める技能。失敗しても 5 - 出目 / 20(小数点以下切り捨て)だけダメージを減らす。', 75),
-            Defence('反撃', '60', '相手の攻撃を受け、反撃する技能。相手が近距離攻撃をしないと成功しない(ダメージ量1D4)', 80)]
+                    'ダメージを受け止める技能。失敗しても 5 - 出目 / 20(小数点以下切り捨て)だけダメージを減らす。'),
+            Defence('反撃', '80', '相手の攻撃を受けつつ、反撃する技能。相手が近距離攻撃をしないと成功しない(ダメージ量1D4)')]
 
 # 能力値を扱うクラスの生成（本ゲームではCOC6版（クトゥルフ神話RPG）の能力値決定システムを採用しています。)
 class Status():
-  def __init__(self, state_STR: int, state_CON: int, state_SIZ: int, state_DEX: int, state_APP: int, state_INT: int, state_POW: int, state_EDU: int, state_HP: int):
+  def __init__(self, state_STR: int, state_CON: int, state_SIZ: int, state_DEX: int, state_APP: int, state_INT: int, state_POW: int, state_EDU: int, state_HP: int, Bullets: int):
     # self.name = name
     self.state_STR = state_STR
     self.state_CON = state_CON
@@ -84,6 +83,7 @@ class Status():
     self.state_POW = state_POW
     self.state_EDU = state_EDU
     self.state_HP = state_HP
+    self.Bullets = Bullets
 
 # ? プレイヤー名は表示しない予定のため一旦外に出しておく。
 enemyName = EnemyNameEdit()
@@ -97,7 +97,8 @@ enemyStatus = Status(DiceRoll(3, 6, 0),
                      DiceRoll(2, 6, 6),
                      DiceRoll(3, 6, 0),
                      DiceRoll(3, 6, 6),
-                     0)
+                     0,
+                     5)
 # state_HPは他のステータスに依存し決定するため後から生成
 enemyStatus.state_HP = round(
     (enemyStatus.state_CON + enemyStatus.state_SIZ) / 2)
@@ -111,10 +112,11 @@ playerStatus = Status(DiceRoll(3, 6, 0),
                       DiceRoll(2, 6, 6),
                       DiceRoll(3, 6, 0),
                       DiceRoll(3, 6, 6),
-                      0)
+                      0,
+                      3)
 # state_HPは他のステータスに依存し決定するため後から生成
 playerStatus.state_HP = round(
-    (enemyStatus.state_CON + enemyStatus.state_SIZ) / 2)
+    (playerStatus.state_CON + playerStatus.state_SIZ) / 2)
 
 # 先行後攻の算出
 randomDEX = False
@@ -123,15 +125,27 @@ if enemyStatus.state_DEX < playerStatus.state_DEX:
   playerFirst = True
 elif enemyStatus.state_DEX == playerStatus.state_DEX:
   randomDEX = True
+  myDiceResult = 0
+  enemyDiceResult = 0
+  while myDiceResult == enemyDiceResult:
+    myDiceResult = DiceRoll(1, 100, 0)
+    enemyDiceResult = DiceRoll(1, 100, 0)
+  if myDiceResult < enemyDiceResult:
+    playerFirst = True
 
 # 自分と敵のDEX・先行/後攻を知らせる文章の生成
 if randomDEX:
-  fastSecondTXT = f'あなたのDEX({playerStatus.state_DEX}) ＝ 敵のDEX({enemyStatus.state_DEX})｜先攻後攻は毎回ランダム'
+  if playerFirst:
+    fastSecondTXT = f'プレイヤーのDEX({playerStatus.state_DEX}) ＝ 敵のDEX({enemyStatus.state_DEX}) \n\
+ダイスバトル：プレイヤー({myDiceResult}) ＜ 敵({enemyDiceResult})｜あなたが先行'
+  else:
+    fastSecondTXT = f'プレイヤーのDEX({playerStatus.state_DEX}) ＝ 敵のDEX({enemyStatus.state_DEX}) \n\
+ダイスバトル：プレイヤー({myDiceResult}) ＞ 敵({enemyDiceResult})｜敵が先行'
 else:
   if playerFirst:
-    fastSecondTXT = f'あなたのDEX({playerStatus.state_DEX}) ＞ 敵のDEX({enemyStatus.state_DEX})｜あなたが先行'
+    fastSecondTXT = f'プレイヤーのDEX({playerStatus.state_DEX}) ＞ 敵のDEX({enemyStatus.state_DEX})｜あなたが先行'
   else:
-    fastSecondTXT = f'あなたのDEX({playerStatus.state_DEX}) ＜ 敵のDEX({enemyStatus.state_DEX})｜敵が先行'
+    fastSecondTXT = f'プレイヤーのDEX({playerStatus.state_DEX}) ＜ 敵のDEX({enemyStatus.state_DEX})｜敵が先行'
 
 # ? 以下、用意したけど使う予定はなし（時間があれば追加予定）
 # 特殊攻撃を扱うクラスの定義
