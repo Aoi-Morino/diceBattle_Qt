@@ -28,6 +28,11 @@ textBoxSize = [620, 440]  # テキストボックスの横幅、縦幅
 mainWindowSize = [textBoxPos[0] + textBoxSize[0] + 10,
                   textBoxPos[1] + textBoxSize[1] + 10 + 30]  # ウィンドウの横幅,縦幅
 
+# プレイヤー守備成功時のテキスト
+playerAvoid = ['敵の攻撃を回避！\n',
+               '敵の攻撃を弾いた！\n',
+               '敵に反撃した！\n']
+
 # 敵守備成功時のテキスト
 enemyAvoid = ['しかし回避されてしまった！\n',
               'しかし弾かれてしまった！\n',
