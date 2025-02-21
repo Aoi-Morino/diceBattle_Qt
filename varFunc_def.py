@@ -22,11 +22,11 @@ def EnemyNameEdit():
 
 # テキストボックスの位置・サイズを指定
 textBoxPos = [480, 10]  # テキストボックスの横位置,縦位置
-textBoxSize = [320, 440]  # テキストボックスの横幅、縦幅
+textBoxSize = [320, 480]  # テキストボックスの横幅、縦幅
 
 # メインウィンドウのサイズを指定（px単位）
 mainWindowSize = [textBoxPos[0] + textBoxSize[0] + 10,
-                  textBoxPos[1] + textBoxSize[1] + 10 + 30]  # ウィンドウの横幅,縦幅
+                  textBoxPos[1] + textBoxSize[1] + 10]  # ウィンドウの横幅,縦幅
 
 # プレイヤー守備成功時のテキスト
 playerAvoid = ['敵の攻撃を回避！\n',

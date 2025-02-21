@@ -114,14 +114,14 @@ class MainWindow(Qw.QMainWindow):
     self.DefenceRBClicked()
 
     # 「実行」ボタンの生成と設定
-    self.btn_run = Qw.QPushButton('実行', self)
-    self.btn_run.setGeometry(vfd.textBoxPos[0], vfd.textBoxPos[1], 100, 20)
+    self.btn_run = Qw.QPushButton('準備完了', self)
+    self.btn_run.setGeometry(120, 380, 250, 60)
     self.btn_run.clicked.connect(self.btn_run_clicked)
 
     # テキストボックス
     self.tb_log = Qw.QTextEdit('', self)
     self.tb_log.setGeometry(
-        vfd.textBoxPos[0], vfd.textBoxPos[1] + 30, vfd.textBoxSize[0], vfd.textBoxSize[1])
+        vfd.textBoxPos[0], vfd.textBoxPos[1], vfd.textBoxSize[0], vfd.textBoxSize[1])
     self.tb_log.setReadOnly(True)
     if self.playerTurn:
       self.tb_log.setPlainText(
@@ -273,25 +273,26 @@ class MainWindow(Qw.QMainWindow):
     tempText = ''
 
     # 正常に動作したかの確認用
-    normalAct_attack = False
-    normalAct_defence = False
+    normalAct = False
 
-    if self.rbId_attack == 4 and vfd.playerStatus.Bullets == 0:
-      tempText += 'error! 弾切れです。他の技能を使用してください。\n'
-    elif 0 <= self.rbId_attack < len(vfd.attacks):
-      normalAct_attack = True
-    elif self.rbId_attack == len(vfd.attacks):
-      tempText += 'error! 戦闘技能が選択されていません。\n'
+    if self.playerTurn:
+      if self.rbId_attack == 4 and vfd.playerStatus.Bullets == 0:
+        tempText += 'error! 弾切れです。他の技能を使用してください。\n'
+      elif 0 <= self.rbId_attack < len(vfd.attacks):
+        normalAct = True
+      elif self.rbId_attack == len(vfd.attacks):
+        tempText += 'error! 戦闘技能が選択されていません。\n'
+      else:
+        tempText += 'error! 戦闘技能が異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
     else:
-      tempText += 'error! 戦闘技能が異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
-    if 0 <= self.rbId_defence < len(vfd.defences):
-      normalAct_defence = True
-    elif self.rbId_defence == len(vfd.defences):
-      tempText += 'error! 守備技能が選択されていません。\n'
-    else:
-      tempText += 'error! 守備技能が異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
+      if 0 <= self.rbId_defence < len(vfd.defences):
+        normalAct = True
+      elif self.rbId_defence == len(vfd.defences):
+        tempText += 'error! 守備技能が選択されていません。\n'
+      else:
+        tempText += 'error! 守備技能が異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
 
-    if normalAct_attack and normalAct_defence:
+    if normalAct:
       # プログレスバーダイアログ (演出効果) の表示
       rollTheDice = ['  1D100抽出中 ~ ―  ',
                      '  1D100抽出中 ~ ＼  ',
