@@ -22,7 +22,7 @@ def EnemyNameEdit():
 
 # メインテキストボックスの位置・サイズを指定
 mainTextBoxPos = [480, 10]  # メインテキストボックスの横位置,縦位置
-mainTextBoxSize = [320, 720]  # メインテキストボックスの横幅、縦幅
+mainTextBoxSize = [320, 600]  # メインテキストボックスの横幅、縦幅
 
 statusTextBoxSize_Ver = mainTextBoxSize[1] / 2 - 5
 

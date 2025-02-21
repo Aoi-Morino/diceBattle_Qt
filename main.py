@@ -23,6 +23,9 @@ class MainWindow(Qw.QMainWindow):
     else:
       self.playerTurn = False
 
+    # ゲーム終了後にボタンが押されたとき、処理が行われないようにするための定義
+    self.GameStart = True
+
     # 戦闘・守備技能未選択時のラジオボタンのIDの設定
     self.rbId = len(vfd.attacks)
     self.rbId_defence = len(vfd.defences)
@@ -275,7 +278,16 @@ bullets = {status.bullets}'
       vfd.enemyStatus.state_HP -= mainDamageTemp
       self.enemyStatus_TB.setPlainText(self.StatusUpdate(vfd.enemyStatus))
     rollResultTXT += "\n\n"
-    return rollResultTXT
+    if vfd.enemyStatus.state_HP <= 0:
+      self.GameStart = False
+      self.enemyStatus_TB.setPlainText(
+          'Died\n\n' + self.StatusUpdate(vfd.enemyStatus))
+      gameEndTXT = '敵を打ち倒しました！あなたの勝ちです。\n'
+      gameEndTXT += 'ゲームを再起動するか、右上のバツ印からゲームを終了してください。\n\n'
+      gameEndTXT += rollResultTXT
+      return gameEndTXT
+    else:
+      return rollResultTXT
 
   # 敵の攻撃の処理
   def EnemyAttack(self):
@@ -336,74 +348,85 @@ bullets = {status.bullets}'
       vfd.playerStatus.state_HP -= mainDamageTemp
       self.playerStatus_TB.setPlainText(self.StatusUpdate(vfd.playerStatus))
     rollResultTXT += "\n\n"
-    return rollResultTXT
+    if vfd.playerStatus.state_HP <= 0:
+      self.GameStart = False
+      self.playerStatus_TB.setPlainText(
+          'Died\n\n' + self.StatusUpdate(vfd.enemyStatus))
+      gameEndTXT = 'あなたはしんでしまいました...あなたの負けです。\n'
+      gameEndTXT += 'ゲームを再起動するか、右上のバツ印からゲームを終了してください。\n\n'
+      gameEndTXT += rollResultTXT
+      return gameEndTXT
+    else:
+      return rollResultTXT
 
   # 「実行」ボタンの押下処理
   def btn_run_clicked(self):
 
-    # 一時保存用のテキストの初期化
-    tempText = ''
+    if self.GameStart:
+      # 一時保存用のテキストの初期化
+      tempText = ''
 
-    # 正常に動作したかの確認用
-    normalAct = False
+      # 正常に動作したかの確認用
+      normalAct = False
 
-    if self.playerTurn:
-      if self.rbId_attack == 4 and vfd.playerStatus.bullets == 0:
-        tempText += 'error! 弾切れです。他の技能を使用してください。\n'
-      elif 0 <= self.rbId_attack < len(vfd.attacks):
-        normalAct = True
-      elif self.rbId_attack == len(vfd.attacks):
-        tempText += 'error! 戦闘技能が選択されていません。\n'
-      else:
-        tempText += 'error! 戦闘技能が異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
-    else:
-      if 0 <= self.rbId_defence < len(vfd.defences):
-        normalAct = True
-      elif self.rbId_defence == len(vfd.defences):
-        tempText += 'error! 守備技能が選択されていません。\n'
-      else:
-        tempText += 'error! 守備技能が異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
-
-    if normalAct:
-      # プログレスバーダイアログ (演出効果) の表示
-      rollTheDice = ['  1D100抽出中 ~ ―  ',
-                     '  1D100抽出中 ~ ＼  ',
-                     '  1D100抽出中 ~ ｜  ',
-                     '  1D100抽出中 ~ ／  ']
-      p_bar = Qw.QProgressDialog(
-          rollTheDice[0], None, 0, 100, self)  # type: ignore
-      p_bar.setWindowModality(Qc.Qt.WindowModality.WindowModal)
-      p_bar.setWindowTitle('ガチャ抽選')
-      p_bar.show()
-      p_barValue = 15
-      for p in range(p_barValue):
-        p_bar.setValue(int(p / p_barValue * 101))
-        if p % 3 == 0:
-          p_bar.setLabelText(rollTheDice[p // 3 % len(rollTheDice)])
-        Qt.QTest.qWait(20)
-      p_bar.close()
       if self.playerTurn:
-        tempText += f'相手は 成功値({vfd.attacks[self.enemyAttackCtrl].successRate}) の攻撃を準備している。\n\n'
-        tempText += self.MyAttack()
-        if self.rbId_attack == 4:
-          vfd.playerStatus.bullets -= 1
-          self.playerStatus_TB.setPlainText(
-              self.StatusUpdate(vfd.playerStatus))
+        if self.rbId_attack == 4 and vfd.playerStatus.bullets == 0:
+          tempText += 'error! 弾切れです。他の技能を使用してください。\n'
+        elif 0 <= self.rbId_attack < len(vfd.attacks):
+          normalAct = True
+        elif self.rbId_attack == len(vfd.attacks):
+          tempText += 'error! 戦闘技能が選択されていません。\n'
+        else:
+          tempText += 'error! 戦闘技能が異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
       else:
-        tempText += 'あなたのターンです。\n\n'
-        tempText += self.EnemyAttack()
-        if self.enemyAttackCtrl == 4:
-          vfd.enemyStatus.bullets -= 1
-          self.enemyStatus_TB.setPlainText(
-              self.StatusUpdate(vfd.enemyStatus))
-        self.enemyAttackCtrl = randint(1, len(vfd.attacks)) - 1  # 敵の行動のリセット。
-        while self.rbId_attack == 4 and vfd.enemyStatus.bullets == 0:
-          self.enemyAttackCtrl = randint(1, len(vfd.attacks)) - 1  # 敵の行動のリセット。
-        self.enemyDefenceCtrl = randint(1, len(vfd.defences)) - 1
-      self.playerTurn = not self.playerTurn
+        if 0 <= self.rbId_defence < len(vfd.defences):
+          normalAct = True
+        elif self.rbId_defence == len(vfd.defences):
+          tempText += 'error! 守備技能が選択されていません。\n'
+        else:
+          tempText += 'error! 守備技能が異常な選択です。制作者に報告し、再度選択するか進行が不可能な場合はゲームを再起動してください。\n'
 
-    tempText += self.mainLog.toPlainText()
-    self.mainLog.setPlainText(tempText)
+      if normalAct:
+        # プログレスバーダイアログ (演出効果) の表示
+        rollTheDice = ['  1D100抽出中 ~ ―  ',
+                       '  1D100抽出中 ~ ＼  ',
+                       '  1D100抽出中 ~ ｜  ',
+                       '  1D100抽出中 ~ ／  ']
+        p_bar = Qw.QProgressDialog(
+            rollTheDice[0], None, 0, 100, self)  # type: ignore
+        p_bar.setWindowModality(Qc.Qt.WindowModality.WindowModal)
+        p_bar.setWindowTitle('ガチャ抽選')
+        p_bar.show()
+        p_barValue = 15
+        for p in range(p_barValue):
+          p_bar.setValue(int(p / p_barValue * 101))
+          if p % 3 == 0:
+            p_bar.setLabelText(rollTheDice[p // 3 % len(rollTheDice)])
+          Qt.QTest.qWait(20)
+        p_bar.close()
+        if self.playerTurn:
+          tempText += f'相手は 成功値({vfd.attacks[self.enemyAttackCtrl].successRate}) の攻撃を準備している。\n\n'
+          tempText += self.MyAttack()
+          if self.rbId_attack == 4:
+            vfd.playerStatus.bullets -= 1
+            self.playerStatus_TB.setPlainText(
+                self.StatusUpdate(vfd.playerStatus))
+        else:
+          tempText += 'あなたのターンです。\n\n'
+          tempText += self.EnemyAttack()
+          if self.enemyAttackCtrl == 4:
+            vfd.enemyStatus.bullets -= 1
+            self.enemyStatus_TB.setPlainText(
+                self.StatusUpdate(vfd.enemyStatus))
+          self.enemyAttackCtrl = randint(1, len(vfd.attacks)) - 1  # 敵の行動のリセット。
+          while self.rbId_attack == 4 and vfd.enemyStatus.bullets == 0:
+            self.enemyAttackCtrl = randint(
+                1, len(vfd.attacks)) - 1  # 敵の行動のリセット。
+          self.enemyDefenceCtrl = randint(1, len(vfd.defences)) - 1
+        self.playerTurn = not self.playerTurn
+
+      tempText += self.mainLog.toPlainText()
+      self.mainLog.setPlainText(tempText)
 
 # 本体
 if __name__ == '__main__':
