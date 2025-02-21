@@ -286,6 +286,14 @@ bullets = {status.bullets}'
       gameEndTXT += 'ゲームを再起動するか、右上のバツ印からゲームを終了してください。\n\n'
       gameEndTXT += rollResultTXT
       return gameEndTXT
+    elif vfd.playerStatus.state_HP <= 0:
+      self.GameStart = False
+      self.playerStatus_TB.setPlainText(
+          'Died\n\n' + self.StatusUpdate(vfd.enemyStatus))
+      gameEndTXT = 'あなたはしんでしまいました...あなたの負けです。\n'
+      gameEndTXT += 'ゲームを再起動するか、右上のバツ印からゲームを終了してください。\n\n'
+      gameEndTXT += rollResultTXT
+      return gameEndTXT
     else:
       return rollResultTXT
 
@@ -353,6 +361,14 @@ bullets = {status.bullets}'
       self.playerStatus_TB.setPlainText(
           'Died\n\n' + self.StatusUpdate(vfd.enemyStatus))
       gameEndTXT = 'あなたはしんでしまいました...あなたの負けです。\n'
+      gameEndTXT += 'ゲームを再起動するか、右上のバツ印からゲームを終了してください。\n\n'
+      gameEndTXT += rollResultTXT
+      return gameEndTXT
+    elif vfd.enemyStatus.state_HP <= 0:
+      self.GameStart = False
+      self.enemyStatus_TB.setPlainText(
+          'Died\n\n' + self.StatusUpdate(vfd.enemyStatus))
+      gameEndTXT = '敵を打ち倒しました！あなたの勝ちです。\n'
       gameEndTXT += 'ゲームを再起動するか、右上のバツ印からゲームを終了してください。\n\n'
       gameEndTXT += rollResultTXT
       return gameEndTXT
