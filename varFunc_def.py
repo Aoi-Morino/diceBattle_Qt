@@ -20,13 +20,22 @@ def EnemyNameEdit():
   tempTXT += ']'
   return tempTXT
 
-# テキストボックスの位置・サイズを指定
-textBoxPos = [480, 10]  # テキストボックスの横位置,縦位置
-textBoxSize = [320, 480]  # テキストボックスの横幅、縦幅
+# メインテキストボックスの位置・サイズを指定
+mainTextBoxPos = [480, 10]  # メインテキストボックスの横位置,縦位置
+mainTextBoxSize = [320, 720]  # メインテキストボックスの横幅、縦幅
+
+statusTextBoxSize_Ver = mainTextBoxSize[1] / 2 - 5
+
+# ステータス表示テキストボックスの位置・サイズ指定
+# プレイヤーステータス表示テキストボックスの横位置,縦位置
+P_statusTextBoxPos = [mainTextBoxPos[0] + mainTextBoxSize[0] + 10, 10]
+E_statusTextBoxPos = [mainTextBoxPos[0] + mainTextBoxSize[0] + 10,
+                      statusTextBoxSize_Ver + 20]  # 敵ステータス表示テキストボックスの横位置,縦位置
+statusTextBoxSize = [320, statusTextBoxSize_Ver]  # プレイヤーステータス表示テキストボックスの横幅、縦幅
 
 # メインウィンドウのサイズを指定（px単位）
-mainWindowSize = [textBoxPos[0] + textBoxSize[0] + 10,
-                  textBoxPos[1] + textBoxSize[1] + 10]  # ウィンドウの横幅,縦幅
+mainWindowSize = [P_statusTextBoxPos[0] + statusTextBoxSize[0] + 10,
+                  mainTextBoxPos[1] + mainTextBoxSize[1] + 10]  # ウィンドウの横幅,縦幅
 
 # プレイヤー守備成功時のテキスト
 playerAvoid = ['敵の攻撃を回避！\n',
@@ -72,8 +81,8 @@ defences = [Defence('回避', '(相手のロールの出目 + 50)', '自分へ�
 
 # 能力値を扱うクラスの生成（本ゲームではCOC6版（クトゥルフ神話RPG）の能力値決定システムを採用しています。)
 class Status():
-  def __init__(self, state_STR: int, state_CON: int, state_SIZ: int, state_DEX: int, state_APP: int, state_INT: int, state_POW: int, state_EDU: int, state_HP: int, Bullets: int):
-    # self.name = name
+  def __init__(self, name: str, state_STR: int, state_CON: int, state_SIZ: int, state_DEX: int, state_APP: int, state_INT: int, state_POW: int, state_EDU: int, state_HP: int, bullets: int):
+    self.name = name
     self.state_STR = state_STR
     self.state_CON = state_CON
     self.state_SIZ = state_SIZ
@@ -83,13 +92,11 @@ class Status():
     self.state_POW = state_POW
     self.state_EDU = state_EDU
     self.state_HP = state_HP
-    self.Bullets = Bullets
-
-# ? プレイヤー名は表示しない予定のため一旦外に出しておく。
-enemyName = EnemyNameEdit()
+    self.bullets = bullets
 
 # 敵のステータスのインスタンスの生成
-enemyStatus = Status(DiceRoll(3, 6, 0),
+enemyStatus = Status(EnemyNameEdit(),
+                     DiceRoll(3, 6, 0),
                      DiceRoll(3, 6, 0),
                      DiceRoll(2, 6, 6),
                      DiceRoll(3, 6, 0),
@@ -98,13 +105,14 @@ enemyStatus = Status(DiceRoll(3, 6, 0),
                      DiceRoll(3, 6, 0),
                      DiceRoll(3, 6, 6),
                      0,
-                     5)
+                     3)
 # state_HPは他のステータスに依存し決定するため後から生成
 enemyStatus.state_HP = round(
     (enemyStatus.state_CON + enemyStatus.state_SIZ) / 2)
 
 # プレイヤーのステータスのインスタンスの生成
-playerStatus = Status(DiceRoll(3, 6, 0),
+playerStatus = Status('Player (YOU)',
+                      DiceRoll(3, 6, 0),
                       DiceRoll(3, 6, 0),
                       DiceRoll(2, 6, 6),
                       DiceRoll(3, 6, 0),
