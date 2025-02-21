@@ -59,7 +59,7 @@ class Attack():
     self.explanation = explanation  # 説明文
 
 # 戦闘技能一覧のインスタンスの生成
-attacks = [Attack('こぶし（パンチ）', 80, 1, 6, False, False, '手を使った攻撃。チョップや張り手も含む。'),
+attacks = [Attack('こぶし（パンチ）', 80, 1, 5, False, False, '手を使った攻撃。チョップや張り手も含む。'),
            Attack('キック', 40, 1, 8, False, False,
                   '脚を使った攻撃。回し蹴りやかかと落としやドロップキックも含む。'),
            Attack('頭突き', 80, 1, 3, True, False, '頭を使った攻撃。驚くほど素早く攻撃できる。'),
