@@ -413,7 +413,7 @@ bullets = {status.bullets}'
         p_bar.setWindowModality(Qc.Qt.WindowModality.WindowModal)
         p_bar.setWindowTitle('ガチャ抽選')
         p_bar.show()
-        p_barValue = 15
+        p_barValue = 25
         for p in range(p_barValue):
           p_bar.setValue(int(p / p_barValue * 101))
           if p % 3 == 0:
