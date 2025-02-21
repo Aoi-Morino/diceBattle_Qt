@@ -318,19 +318,23 @@ bullets = {status.bullets}'
         myDiceResult = vfd.DiceRoll(1, 100, 0)
         if successRateDefTemp[self.rbId_defence] >= myDiceResult:
           rollResultTXT += f'自分：{vfd.defences[self.rbId_defence].name}（{successRateDefTemp[self.rbId_defence]}） ≧ {myDiceResult}　成功\n'
-          rollResultTXT += vfd.playerAvoid[self.rbId_defence]
           if self.rbId_defence == 2:
             counterDamageTemp = vfd.DiceRoll(1, 4, 0)
-            rollResultTXT += f'1D4 => {counterDamageTemp}ダメージ\n'
+            rollResultTXT += f'敵の攻撃を受けてしまった！({mainDamageTemp}ダメージ)\n'
+            rollResultTXT += vfd.playerAvoid[self.rbId_defence] + \
+                f'1D4 => {counterDamageTemp}ダメージ\n'
             vfd.enemyStatus.state_HP -= counterDamageTemp
             self.enemyStatus_TB.setPlainText(self.StatusUpdate(vfd.enemyStatus))
+          else:
+            mainDamageTemp = 0
+            rollResultTXT += vfd.playerAvoid[self.rbId_defence]
         else:
           rollResultTXT += f'自分：{vfd.defences[self.rbId_defence].name}（{successRateDefTemp[self.rbId_defence]}） ＜ {myDiceResult}　失敗\n'
           if self.rbId_defence == 1:
             mainDamageTemp -= floor(5 - myDiceResult / 20)
           rollResultTXT += f'敵の攻撃を受けてしまった！({mainDamageTemp}ダメージ)\n'
-          vfd.playerStatus.state_HP -= mainDamageTemp
-          self.playerStatus_TB.setPlainText(self.StatusUpdate(vfd.playerStatus))
+      vfd.playerStatus.state_HP -= mainDamageTemp
+      self.playerStatus_TB.setPlainText(self.StatusUpdate(vfd.playerStatus))
     rollResultTXT += "\n\n"
     return rollResultTXT
 
